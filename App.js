@@ -11,161 +11,201 @@ import {
 
 const foods = [
   { id: 1, name: "कुमाऊँनी थाली", price: 199, emoji: "🍛" },
-  { id: 2, name: "भट्ट की चुड़कानी", price: 129, emoji: "🥘" },
+  { id: 2, name: "भट्ट की चुड़कानी", price: 149, emoji: "🥘" },
   { id: 3, name: "आलू के गुटके", price: 99, emoji: "🥔" },
-  { id: 4, name: "काफुली", price: 129, emoji: "🥬" },
-  { id: 5, name: "झंगोरे की खीर", price: 99, emoji: "🍚" },
-  { id: 6, name: "सिंगल के पकोड़े", price: 89, emoji: "🥟" },
-  { id: 7, name: "मंडुवे की रोटी", price: 79, emoji: "🫓" },
-  { id: 8, name: "बाल मिठाई", price: 119, emoji: "🍬" },
+  { id: 4, name: "काफुली", price: 129, emoji: "🍲" },
+  { id: 5, name: "झंगोरे की खीर", price: 119, emoji: "🍮" },
+  { id: 6, name: "सिंगल की रोटी", price: 79, emoji: "🫓" },
 ];
 
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [cart, setCart] = useState([]);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
 
   const addToCart = (food) => {
-    const exists = cart.find((item) => item.id === food.id);
-
-    if (exists) {
-      setCart(
-        cart.map((item) =>
-          item.id === food.id
-            ? { ...item, qty: item.qty + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...food, qty: 1 }]);
-    }
+    setCart([...cart, food]);
+    Alert.alert("सफलता", `${food.name} कार्ट में जोड़ दिया गया`);
   };
 
-  const increase = (id) => {
-    setCart(
-      cart.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
+  const removeFromCart = (index) => {
+    setCart(cart.filter((_, i) => i !== index));
   };
 
-  const decrease = (id) => {
-    setCart(
-      cart
-        .map((item) =>
-          item.id === id ? { ...item, qty: item.qty - 1 } : item
-        )
-        .filter((item) => item.qty > 0)
-    );
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  const openFood = (food) => {
+    setSelectedFood(food);
+    setScreen("food");
   };
-
-  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
 
   const placeOrder = () => {
     if (!name || !phone || !address) {
-      Alert.alert("जानकारी अधूरी है", "कृपया नाम, मोबाइल और पता भरें।");
+      Alert.alert("जानकारी पूरी करें", "नाम, मोबाइल और पता भरें।");
       return;
     }
 
-    Alert.alert(
-      "🎉 Order Confirmed",
-      `धन्यवाद ${name}!\n\nआपका Kumaoni Jayka order मिल गया है।\n\nकुल राशि: ₹${totalPrice}`,
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            setCart([]);
-            setName("");
-            setPhone("");
-            setAddress("");
-            setScreen("home");
-          },
-        },
-      ]
-    );
+    if (cart.length === 0) {
+      Alert.alert("कार्ट खाली है", "पहले कुछ खाना चुनें।");
+      return;
+    }
+
+    setScreen("success");
   };
 
+  const goHome = () => {
+    setScreen("home");
+    setSelectedFood(null);
+  };
+
+  // HOME
+  if (screen === "home") {
+    return (
+      <View style={styles.container}>
+        <ScrollView>
+          <View style={styles.header}>
+            <Text style={styles.logo}>🍛</Text>
+            <View>
+              <Text style={styles.appName}>Kumaoni Jayka</Text>
+              <Text style={styles.tagline}>पहाड़ों का असली स्वाद ❤️</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.cartButton}
+              onPress={() => setScreen("cart")}
+            >
+              <Text style={styles.cartText}>🛒 {cart.length}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.banner}>
+            <Text style={styles.bannerTitle}>कुमाऊँ का स्वाद अब आपके घर 🏔️</Text>
+            <Text style={styles.bannerText}>
+              स्वादिष्ट पहाड़ी खाना • घर बैठे ऑर्डर करें
+            </Text>
+          </View>
+
+          <Text style={styles.sectionTitle}>आज का मेन्यू</Text>
+
+          {foods.map((food) => (
+            <TouchableOpacity
+              key={food.id}
+              style={styles.foodCard}
+              onPress={() => openFood(food)}
+            >
+              <Text style={styles.foodEmoji}>{food.emoji}</Text>
+
+              <View style={styles.foodInfo}>
+                <Text style={styles.foodName}>{food.name}</Text>
+                <Text style={styles.foodPrice}>₹{food.price}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => addToCart(food)}
+              >
+                <Text style={styles.addText}>+ जोड़ें</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // FOOD DETAILS
+  if (screen === "food" && selectedFood) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={goHome}>
+            <Text style={styles.back}>← वापस</Text>
+          </TouchableOpacity>
+          <Text style={styles.topTitle}>खाने की जानकारी</Text>
+        </View>
+
+        <View style={styles.detailBox}>
+          <Text style={styles.bigEmoji}>{selectedFood.emoji}</Text>
+          <Text style={styles.detailName}>{selectedFood.name}</Text>
+          <Text style={styles.detailPrice}>₹{selectedFood.price}</Text>
+
+          <Text style={styles.description}>
+            स्वादिष्ट पारंपरिक कुमाऊँनी व्यंजन, ताज़ी सामग्री से तैयार।
+          </Text>
+
+          <TouchableOpacity
+            style={styles.orderButton}
+            onPress={() => addToCart(selectedFood)}
+          >
+            <Text style={styles.orderButtonText}>🛒 कार्ट में जोड़ें</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setScreen("cart")}
+          >
+            <Text style={styles.secondaryText}>कार्ट देखें</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // CART
   if (screen === "cart") {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => setScreen("home")}>
-            <Text style={styles.back}>←</Text>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={goHome}>
+            <Text style={styles.back}>← होम</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>🛒 आपका Cart</Text>
+          <Text style={styles.topTitle}>🛒 मेरा कार्ट</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView>
           {cart.length === 0 ? (
-            <View style={styles.empty}>
+            <View style={styles.emptyBox}>
               <Text style={styles.emptyEmoji}>🛒</Text>
-              <Text style={styles.emptyTitle}>Cart खाली है</Text>
-              <Text style={styles.emptyText}>
-                अपना पसंदीदा Kumaoni खाना चुनें।
-              </Text>
+              <Text style={styles.emptyText}>आपका कार्ट खाली है</Text>
 
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => setScreen("home")}
-              >
-                <Text style={styles.buttonText}>खाना देखें</Text>
+              <TouchableOpacity style={styles.orderButton} onPress={goHome}>
+                <Text style={styles.orderButtonText}>खाना देखें</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
-              {cart.map((item) => (
-                <View style={styles.cartItem} key={item.id}>
-                  <Text style={styles.foodEmoji}>{item.emoji}</Text>
+              {cart.map((item, index) => (
+                <View style={styles.cartItem} key={index}>
+                  <Text style={styles.cartEmoji}>{item.emoji}</Text>
 
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cartName}>{item.name}</Text>
-                    <Text style={styles.price}>₹{item.price}</Text>
-
-                    <View style={styles.quantity}>
-                      <TouchableOpacity
-                        style={styles.qtyButton}
-                        onPress={() => decrease(item.id)}
-                      >
-                        <Text style={styles.qtyText}>−</Text>
-                      </TouchableOpacity>
-
-                      <Text style={styles.qtyNumber}>{item.qty}</Text>
-
-                      <TouchableOpacity
-                        style={styles.qtyButton}
-                        onPress={() => increase(item.id)}
-                      >
-                        <Text style={styles.qtyText}>+</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.cartPrice}>₹{item.price}</Text>
                   </View>
 
-                  <Text style={styles.itemTotal}>
-                    ₹{item.price * item.qty}
-                  </Text>
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => removeFromCart(index)}
+                  >
+                    <Text style={styles.removeText}>हटाएँ</Text>
+                  </TouchableOpacity>
                 </View>
               ))}
 
               <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>कुल सामान</Text>
-                <Text style={styles.totalLabel}>{totalItems}</Text>
-
-                <Text style={styles.grandTotal}>कुल राशि</Text>
-                <Text style={styles.grandTotal}>₹{totalPrice}</Text>
+                <Text style={styles.totalLabel}>कुल राशि</Text>
+                <Text style={styles.total}>₹{total}</Text>
               </View>
 
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={styles.orderButton}
                 onPress={() => setScreen("checkout")}
               >
-                <Text style={styles.buttonText}>Order करें →</Text>
+                <Text style={styles.orderButtonText}>
+                  आगे बढ़ें →
+                </Text>
               </TouchableOpacity>
             </>
           )}
@@ -174,61 +214,54 @@ export default function App() {
     );
   }
 
+  // CHECKOUT
   if (screen === "checkout") {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={styles.topBar}>
           <TouchableOpacity onPress={() => setScreen("cart")}>
-            <Text style={styles.back}>←</Text>
+            <Text style={styles.back}>← कार्ट</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>📦 Order Details</Text>
+          <Text style={styles.topTitle}>ऑर्डर करें</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.sectionTitle}>Delivery Details</Text>
+        <ScrollView>
+          <Text style={styles.formTitle}>डिलीवरी जानकारी</Text>
 
-          <Text style={styles.inputLabel}>नाम</Text>
           <TextInput
             style={styles.input}
-            placeholder="अपना नाम लिखें"
+            placeholder="आपका नाम"
             value={name}
             onChangeText={setName}
           />
 
-          <Text style={styles.inputLabel}>मोबाइल नंबर</Text>
           <TextInput
             style={styles.input}
-            placeholder="10 अंकों का मोबाइल नंबर"
+            placeholder="मोबाइल नंबर"
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
           />
 
-          <Text style={styles.inputLabel}>Delivery Address</Text>
           <TextInput
-            style={[styles.input, styles.address]}
-            placeholder="पूरा पता लिखें"
+            style={[styles.input, styles.addressInput]}
+            placeholder="पूरा डिलीवरी पता"
             multiline
             value={address}
             onChangeText={setAddress}
           />
 
-          <View style={styles.checkoutBox}>
-            <Text style={styles.checkoutTitle}>Order Summary</Text>
-            <Text style={styles.checkoutText}>
-              Items: {totalItems}
-            </Text>
-            <Text style={styles.checkoutTotal}>
-              Total: ₹{totalPrice}
-            </Text>
+          <View style={styles.totalBox}>
+            <Text style={styles.totalLabel}>ऑर्डर कुल</Text>
+            <Text style={styles.total}>₹{total}</Text>
           </View>
 
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={styles.orderButton}
             onPress={placeOrder}
           >
-            <Text style={styles.buttonText}>
-              🚚 Order Place करें
+            <Text style={styles.orderButtonText}>
+              🛍️ ऑर्डर प्लेस करें
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -236,268 +269,260 @@ export default function App() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.logo}>🏔️ Kumaoni Jayka</Text>
-          <Text style={styles.subtitle}>
-            पहाड़ों का असली स्वाद ❤️
+  // SUCCESS
+  if (screen === "success") {
+    return (
+      <View style={styles.successContainer}>
+        <Text style={styles.successEmoji}>🎉</Text>
+        <Text style={styles.successTitle}>ऑर्डर सफल हुआ!</Text>
+
+        <Text style={styles.successText}>
+          धन्यवाद {name}!{`\n`}
+          आपका Kumaoni Jayka ऑर्डर प्राप्त हो गया है।
+        </Text>
+
+        <View style={styles.orderNumber}>
+          <Text style={styles.orderNumberText}>
+            ऑर्डर राशि: ₹{total}
           </Text>
         </View>
 
         <TouchableOpacity
-          style={styles.cartButton}
-          onPress={() => setScreen("cart")}
+          style={styles.orderButton}
+          onPress={() => {
+            setCart([]);
+            setScreen("home");
+          }}
         >
-          <Text style={styles.cartIcon}>🛒</Text>
-          {totalItems > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{totalItems}</Text>
-            </View>
-          )}
+          <Text style={styles.orderButtonText}>होम पर जाएँ</Text>
         </TouchableOpacity>
       </View>
+    );
+  }
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.banner}>
-          <Text style={styles.bannerEmoji}>🍲</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bannerTitle}>
-              घर जैसा पहाड़ी खाना
-            </Text>
-            <Text style={styles.bannerText}>
-              ताजा • स्वादिष्ट • Kumaoni
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>आज का Menu</Text>
-
-        {foods.map((food) => (
-          <View style={styles.foodCard} key={food.id}>
-            <View style={styles.foodImage}>
-              <Text style={styles.bigEmoji}>{food.emoji}</Text>
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.foodName}>{food.name}</Text>
-              <Text style={styles.foodDescription}>
-                स्वादिष्ट पारंपरिक पहाड़ी व्यंजन
-              </Text>
-              <Text style={styles.foodPrice}>₹{food.price}</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => addToCart(food)}
-            >
-              <Text style={styles.addText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-
-        <View style={styles.footer}>
-          <Text style={styles.footerTitle}>🏔️ Kumaoni Jayka</Text>
-          <Text style={styles.footerText}>
-            उत्तराखंड के स्वाद को आपके घर तक ❤️
-          </Text>
-        </View>
-      </ScrollView>
-    </View>
-  );
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8F0",
+    paddingTop: 45,
   },
 
   header: {
-    backgroundColor: "#7B2D26",
-    paddingTop: 45,
-    paddingBottom: 18,
-    paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#FFFFFF",
   },
 
   logo: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 42,
+    marginRight: 10,
   },
 
-  subtitle: {
-    color: "#FFE4C4",
+  appName: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#1B7A3A",
+  },
+
+  tagline: {
+    fontSize: 12,
+    color: "#777",
     marginTop: 3,
-    fontSize: 13,
-  },
-
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-
-  back: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    marginRight: 15,
   },
 
   cartButton: {
-    backgroundColor: "#FFFFFF",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    marginLeft: "auto",
+    backgroundColor: "#1B7A3A",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 20,
   },
 
-  cartIcon: {
-    fontSize: 23,
-  },
-
-  badge: {
-    position: "absolute",
-    right: -3,
-    top: -3,
-    backgroundColor: "#E53935",
-    width: 21,
-    height: 21,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 12,
+  cartText: {
+    color: "#fff",
     fontWeight: "bold",
   },
 
-  content: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-
   banner: {
-    backgroundColor: "#FFE0B2",
+    margin: 15,
+    padding: 22,
     borderRadius: 18,
-    padding: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 22,
-  },
-
-  bannerEmoji: {
-    fontSize: 45,
-    marginRight: 15,
+    backgroundColor: "#DFF3E5",
   },
 
   bannerTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#5D241D",
+    color: "#155D2C",
   },
 
   bannerText: {
-    marginTop: 5,
-    color: "#7B4A35",
+    marginTop: 7,
+    color: "#555",
   },
 
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: "bold",
-    color: "#5D241D",
-    marginBottom: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    color: "#333",
   },
 
   foodCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    elevation: 3,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginBottom: 12,
+    padding: 13,
+    borderRadius: 15,
+    elevation: 2,
   },
 
-  foodImage: {
-    width: 70,
-    height: 70,
-    backgroundColor: "#FFF0DD",
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  foodEmoji: {
+    fontSize: 42,
     marginRight: 12,
   },
 
-  bigEmoji: {
-    fontSize: 38,
+  foodInfo: {
+    flex: 1,
   },
 
   foodName: {
     fontSize: 17,
     fontWeight: "bold",
-    color: "#333333",
-  },
-
-  foodDescription: {
-    fontSize: 11,
-    color: "#777777",
-    marginTop: 3,
+    color: "#333",
   },
 
   foodPrice: {
     fontSize: 16,
+    color: "#1B7A3A",
     fontWeight: "bold",
-    color: "#7B2D26",
-    marginTop: 6,
+    marginTop: 5,
   },
 
   addButton: {
-    backgroundColor: "#7B2D26",
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    backgroundColor: "#1B7A3A",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: 10,
   },
 
   addText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontWeight: "bold",
   },
 
-  primaryButton: {
-    backgroundColor: "#7B2D26",
-    padding: 16,
-    borderRadius: 14,
+  topBar: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 18,
+    padding: 16,
+    backgroundColor: "#fff",
   },
 
-  buttonText: {
-    color: "#FFFFFF",
+  back: {
+    color: "#1B7A3A",
+    fontWeight: "bold",
+  },
+
+  topTitle: {
+    fontSize: 19,
+    fontWeight: "bold",
+    marginLeft: 25,
+  },
+
+  detailBox: {
+    margin: 20,
+    backgroundColor: "#fff",
+    padding: 25,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+
+  bigEmoji: {
+    fontSize: 100,
+  },
+
+  detailName: {
+    fontSize: 25,
+    fontWeight: "bold",
+    marginTop: 15,
+  },
+
+  detailPrice: {
+    fontSize: 22,
+    color: "#1B7A3A",
+    fontWeight: "bold",
+    marginTop: 8,
+  },
+
+  description: {
+    textAlign: "center",
+    color: "#666",
+    marginVertical: 20,
+    lineHeight: 22,
+  },
+
+  orderButton: {
+    backgroundColor: "#1B7A3A",
+    margin: 20,
+    padding: 16,
+    borderRadius: 13,
+    alignItems: "center",
+  },
+
+  orderButtonText: {
+    color: "#fff",
     fontSize: 17,
     fontWeight: "bold",
   },
 
-  cartItem: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 15,
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: "#1B7A3A",
     padding: 14,
-    marginBottom: 12,
-    flexDirection: "row",
+    borderRadius: 12,
+    width: "90%",
     alignItems: "center",
   },
 
-  foodEmoji: {
-    fontSize: 38,
+  secondaryText: {
+    color: "#1B7A3A",
+    fontWeight: "bold",
+  },
+
+  emptyBox: {
+    alignItems: "center",
+    paddingTop: 100,
+  },
+
+  emptyEmoji: {
+    fontSize: 70,
+  },
+
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 15,
+  },
+
+  cartItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 15,
+  },
+
+  cartEmoji: {
+    fontSize: 40,
     marginRight: 12,
   },
 
@@ -506,148 +531,101 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  price: {
-    color: "#7B2D26",
-    marginTop: 3,
+  cartPrice: {
+    color: "#1B7A3A",
+    fontWeight: "bold",
+    marginTop: 5,
   },
 
-  quantity: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-  },
-
-  qtyButton: {
-    width: 30,
-    height: 30,
+  removeButton: {
+    backgroundColor: "#FFE5E5",
+    padding: 8,
     borderRadius: 8,
-    backgroundColor: "#FFE0B2",
-    alignItems: "center",
-    justifyContent: "center",
   },
 
-  qtyText: {
-    fontSize: 20,
+  removeText: {
+    color: "#D22",
     fontWeight: "bold",
-    color: "#7B2D26",
-  },
-
-  qtyNumber: {
-    marginHorizontal: 13,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-
-  itemTotal: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#7B2D26",
   },
 
   totalBox: {
-    backgroundColor: "#FFE0B2",
-    borderRadius: 15,
-    padding: 18,
-    marginTop: 10,
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "space-between",
+    margin: 20,
+    padding: 18,
+    backgroundColor: "#fff",
+    borderRadius: 15,
   },
 
   totalLabel: {
-    width: "50%",
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: "bold",
   },
 
-  grandTotal: {
-    width: "50%",
-    fontSize: 19,
+  total: {
+    fontSize: 21,
     fontWeight: "bold",
-    color: "#7B2D26",
+    color: "#1B7A3A",
   },
 
-  inputLabel: {
-    fontSize: 15,
+  formTitle: {
+    fontSize: 22,
     fontWeight: "bold",
-    marginTop: 12,
-    marginBottom: 6,
-    color: "#5D241D",
+    margin: 20,
   },
 
   input: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0C8B0",
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginBottom: 15,
+    padding: 15,
     borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
 
-  address: {
+  addressInput: {
     height: 100,
     textAlignVertical: "top",
   },
 
-  checkoutBox: {
-    backgroundColor: "#FFE0B2",
-    padding: 18,
-    borderRadius: 15,
-    marginTop: 20,
-  },
-
-  checkoutTitle: {
-    fontSize: 19,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#5D241D",
-  },
-
-  checkoutText: {
-    fontSize: 16,
-    marginBottom: 6,
-  },
-
-  checkoutTotal: {
-    fontSize: 21,
-    fontWeight: "bold",
-    color: "#7B2D26",
-  },
-
-  empty: {
+  successContainer: {
+    flex: 1,
+    backgroundColor: "#FFF8F0",
     alignItems: "center",
-    paddingTop: 70,
+    justifyContent: "center",
+    padding: 25,
   },
 
-  emptyEmoji: {
-    fontSize: 65,
+  successEmoji: {
+    fontSize: 80,
   },
 
-  emptyTitle: {
-    fontSize: 23,
+  successTitle: {
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#1B7A3A",
     marginTop: 15,
   },
 
-  emptyText: {
-    color: "#777777",
-    marginTop: 8,
+  successText: {
+    textAlign: "center",
+    fontSize: 17,
+    color: "#555",
+    marginTop: 15,
+    lineHeight: 26,
   },
 
-  footer: {
-    alignItems: "center",
-    marginTop: 25,
-    padding: 20,
+  orderNumber: {
+    backgroundColor: "#fff",
+    padding: 18,
+    marginTop: 20,
+    borderRadius: 15,
   },
 
-  footerTitle: {
-    fontSize: 20,
+  orderNumberText: {
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#7B2D26",
-  },
-
-  footerText: {
-    color: "#777777",
-    marginTop: 5,
   },
 });
