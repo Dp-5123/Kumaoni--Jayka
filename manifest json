@@ -1,0 +1,17 @@
+{
+  "name": "Kumaoni Jayka",
+  "short_name": "Kumaoni Jayka",
+  "description": "Kumaoni Jayka Food Delivery App",
+  "start_url": "https://kumaoni-jayka--deeppathak651.replit.app/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6b00",
+  "lang": "hi",
+  "dir": "ltr",
+  "categories": [
+    "food",
+    "shopping"
+  ]
+}
