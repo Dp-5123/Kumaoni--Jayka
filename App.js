@@ -10,62 +10,14 @@ import {
 } from "react-native";
 
 const menuItems = [
-  {
-    id: 1,
-    name: "भट्ट की चड़कानी",
-    price: 120,
-    emoji: "🍲",
-    desc: "पारंपरिक कुमाऊँनी स्वाद",
-  },
-  {
-    id: 2,
-    name: "आलू के गुटके",
-    price: 80,
-    emoji: "🥔",
-    desc: "मसालेदार पहाड़ी आलू",
-  },
-  {
-    id: 3,
-    name: "झंगोरे की खीर",
-    price: 100,
-    emoji: "🍚",
-    desc: "पारंपरिक पहाड़ी मिठाई",
-  },
-  {
-    id: 4,
-    name: "मंडुवे की रोटी",
-    price: 60,
-    emoji: "🫓",
-    desc: "स्वस्थ और स्वादिष्ट रोटी",
-  },
-  {
-    id: 5,
-    name: "कापा",
-    price: 110,
-    emoji: "🥬",
-    desc: "कुमाऊँनी पालक की सब्जी",
-  },
-  {
-    id: 6,
-    name: "भांग की चटनी",
-    price: 50,
-    emoji: "🌿",
-    desc: "पहाड़ी स्पेशल चटनी",
-  },
-  {
-    id: 7,
-    name: "सिंगल की सब्जी",
-    price: 100,
-    emoji: "🥘",
-    desc: "घर जैसा पहाड़ी स्वाद",
-  },
-  {
-    id: 8,
-    name: "बाल मिठाई",
-    price: 90,
-    emoji: "🍬",
-    desc: "उत्तराखंड की प्रसिद्ध मिठाई",
-  },
+  { id: 1, name: "भट्ट की चड़कानी", price: 120, category: "मुख्य भोजन", emoji: "🍛" },
+  { id: 2, name: "आलू के गुटके", price: 80, category: "नाश्ता", emoji: "🥔" },
+  { id: 3, name: "झंगोरे की खीर", price: 100, category: "मिठाई", emoji: "🍮" },
+  { id: 4, name: "काफुली", price: 120, category: "मुख्य भोजन", emoji: "🥣" },
+  { id: 5, name: "मंडुवे की रोटी", price: 60, category: "रोटी", emoji: "🫓" },
+  { id: 6, name: "भांग की चटनी", price: 50, category: "साइड", emoji: "🌿" },
+  { id: 7, name: "रस", price: 100, category: "मुख्य भोजन", emoji: "🍲" },
+  { id: 8, name: "सिंगल की सब्जी", price: 110, category: "मुख्य भोजन", emoji: "🥘" },
 ];
 
 export default function App() {
@@ -73,154 +25,167 @@ export default function App() {
   const [cart, setCart] = useState([]);
 
   const addToCart = (item) => {
-    const existing = cart.find((x) => x.id === item.id);
+    setCart((oldCart) => {
+      const found = oldCart.find((x) => x.id === item.id);
 
-    if (existing) {
-      setCart(
-        cart.map((x) =>
+      if (found) {
+        return oldCart.map((x) =>
           x.id === item.id ? { ...x, qty: x.qty + 1 } : x
-        )
-      );
-    } else {
-      setCart([...cart, { ...item, qty: 1 }]);
-    }
+        );
+      }
 
-    Alert.alert("जोड़ा गया", `${item.name} कार्ट में जोड़ दिया गया`);
+      return [...oldCart, { ...item, qty: 1 }];
+    });
+
+    Alert.alert("कार्ट में जोड़ा गया", item.name);
   };
 
-  const increase = (id) => {
-    setCart(
-      cart.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
-  };
+  const removeFromCart = (id) => {
+    setCart((oldCart) => {
+      const item = oldCart.find((x) => x.id === id);
 
-  const decrease = (id) => {
-    setCart(
-      cart
-        .map((item) =>
-          item.id === id ? { ...item, qty: item.qty - 1 } : item
-        )
-        .filter((item) => item.qty > 0)
-    );
+      if (!item) return oldCart;
+
+      if (item.qty > 1) {
+        return oldCart.map((x) =>
+          x.id === id ? { ...x, qty: x.qty - 1 } : x
+        );
+      }
+
+      return oldCart.filter((x) => x.id !== id);
+    });
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  const subtotal = cart.reduce(
+  const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.qty,
     0
   );
 
-  const deliveryFee = subtotal > 0 ? 30 : 0;
-  const total = subtotal + deliveryFee;
-
   const placeOrder = () => {
     if (cart.length === 0) {
-      Alert.alert("कार्ट खाली है", "पहले कुछ खाना ऑर्डर करें।");
+      Alert.alert("कार्ट खाली है", "पहले कोई खाना कार्ट में जोड़ें।");
       return;
     }
 
     Alert.alert(
       "ऑर्डर सफल 🎉",
-      "आपका ऑर्डर Kumaoni Jayka को मिल गया है।",
-      [
-        {
-          text: "ठीक है",
-          onPress: () => {
-            setCart([]);
-            setScreen("home");
-          },
-        },
-      ]
+      `आपका ₹${totalPrice} का ऑर्डर प्राप्त हो गया है।`
     );
+
+    setCart([]);
+    setScreen("home");
   };
 
-  const Home = () => (
+  const HomeScreen = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
         <Text style={styles.logo}>🏔️</Text>
-        <Text style={styles.appName}>Kumaoni Jayka</Text>
-        <Text style={styles.tagline}>
-          पहाड़ का स्वाद, आपके घर तक ❤️
+        <Text style={styles.title}>Kumaoni Jayka</Text>
+        <Text style={styles.subtitle}>
+          पहाड़ों का असली स्वाद आपके घर तक ❤️
         </Text>
 
         <TouchableOpacity
-          style={styles.mainButton}
+          style={styles.orderButton}
           onPress={() => setScreen("menu")}
         >
-          <Text style={styles.mainButtonText}>🍽️ अभी ऑर्डर करें</Text>
+          <Text style={styles.orderButtonText}>🍽️ अभी ऑर्डर करें</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>हमारे खास पकवान</Text>
+      <Text style={styles.sectionTitle}>आज का खास खाना</Text>
 
-        <View style={styles.grid}>
-          {menuItems.slice(0, 4).map((item) => (
-            <View style={styles.smallCard} key={item.id}>
-              <Text style={styles.foodEmoji}>{item.emoji}</Text>
-              <Text style={styles.foodName}>{item.name}</Text>
-              <Text style={styles.price}>₹{item.price}</Text>
-            </View>
-          ))}
+      <View style={styles.featureBox}>
+        <Text style={styles.featureEmoji}>🥔</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.featureTitle}>आलू के गुटके</Text>
+          <Text style={styles.featureText}>
+            पहाड़ी मसालों के साथ स्वादिष्ट और पारंपरिक
+          </Text>
+          <Text style={styles.price}>₹80</Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.smallButton}
+          onPress={() => addToCart(menuItems[1])}
+        >
+          <Text style={styles.smallButtonText}>+ जोड़ें</Text>
+        </TouchableOpacity>
       </View>
 
+      <Text style={styles.sectionTitle}>हमारे बारे में</Text>
+
       <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>🌿 असली कुमाऊँनी स्वाद</Text>
         <Text style={styles.infoText}>
-          पारंपरिक पहाड़ी मसालों और घर जैसी रेसिपी से तैयार स्वादिष्ट खाना।
+          Kumaoni Jayka में आपको उत्तराखंड के पारंपरिक कुमाऊँनी व्यंजनों
+          का स्वाद मिलेगा। हमारा उद्देश्य पहाड़ों के घर जैसा स्वाद
+          आपके घर तक पहुँचाना है।
         </Text>
+      </View>
+
+      <View style={styles.features}>
+        <View style={styles.featureCard}>
+          <Text style={styles.cardEmoji}>🥘</Text>
+          <Text style={styles.cardTitle}>पारंपरिक स्वाद</Text>
+        </View>
+
+        <View style={styles.featureCard}>
+          <Text style={styles.cardEmoji}>🚴</Text>
+          <Text style={styles.cardTitle}>होम डिलीवरी</Text>
+        </View>
+
+        <View style={styles.featureCard}>
+          <Text style={styles.cardEmoji}>❤️</Text>
+          <Text style={styles.cardTitle}>ताज़ा खाना</Text>
+        </View>
       </View>
     </ScrollView>
   );
 
-  const Menu = () => (
+  const MenuScreen = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
       <Text style={styles.pageTitle}>🍽️ हमारा मेन्यू</Text>
 
       {menuItems.map((item) => (
         <View style={styles.menuCard} key={item.id}>
-          <View style={styles.foodIconBox}>
-            <Text style={styles.bigEmoji}>{item.emoji}</Text>
-          </View>
+          <Text style={styles.menuEmoji}>{item.emoji}</Text>
 
           <View style={styles.menuInfo}>
             <Text style={styles.menuName}>{item.name}</Text>
-            <Text style={styles.menuDesc}>{item.desc}</Text>
-            <Text style={styles.menuPrice}>₹{item.price}</Text>
+            <Text style={styles.category}>{item.category}</Text>
+            <Text style={styles.price}>₹{item.price}</Text>
           </View>
 
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => addToCart(item)}
           >
-            <Text style={styles.addText}>+</Text>
+            <Text style={styles.addButtonText}>+ जोड़ें</Text>
           </TouchableOpacity>
         </View>
       ))}
     </ScrollView>
   );
 
-  const Cart = () => (
+  const CartScreen = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>🛒 आपका कार्ट</Text>
+      <Text style={styles.pageTitle}>🛒 आपकी कार्ट</Text>
 
       {cart.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🛒</Text>
           <Text style={styles.emptyTitle}>कार्ट खाली है</Text>
           <Text style={styles.emptyText}>
-            अपना पसंदीदा पहाड़ी खाना चुनें।
+            अपने पसंदीदा कुमाऊँनी व्यंजन जोड़ें।
           </Text>
 
           <TouchableOpacity
-            style={styles.mainButton}
+            style={styles.orderButton}
             onPress={() => setScreen("menu")}
           >
-            <Text style={styles.mainButtonText}>मेन्यू देखें</Text>
+            <Text style={styles.orderButtonText}>मेन्यू देखें</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -230,14 +195,16 @@ export default function App() {
               <Text style={styles.cartEmoji}>{item.emoji}</Text>
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.cartName}>{item.name}</Text>
-                <Text style={styles.cartPrice}>₹{item.price}</Text>
+                <Text style={styles.menuName}>{item.name}</Text>
+                <Text style={styles.price}>
+                  ₹{item.price} × {item.qty}
+                </Text>
               </View>
 
-              <View style={styles.qtyBox}>
+              <View style={styles.quantity}>
                 <TouchableOpacity
                   style={styles.qtyButton}
-                  onPress={() => decrease(item.id)}
+                  onPress={() => removeFromCart(item.id)}
                 >
                   <Text style={styles.qtyText}>−</Text>
                 </TouchableOpacity>
@@ -246,7 +213,7 @@ export default function App() {
 
                 <TouchableOpacity
                   style={styles.qtyButton}
-                  onPress={() => increase(item.id)}
+                  onPress={() => addToCart(item)}
                 >
                   <Text style={styles.qtyText}>+</Text>
                 </TouchableOpacity>
@@ -254,95 +221,22 @@ export default function App() {
             </View>
           ))}
 
-          <View style={styles.bill}>
-            <Text style={styles.billTitle}>ऑर्डर विवरण</Text>
+          <View style={styles.totalBox}>
+            <Text style={styles.totalLabel}>कुल आइटम</Text>
+            <Text style={styles.totalValue}>{totalItems}</Text>
 
-            <View style={styles.billRow}>
-              <Text>Subtotal</Text>
-              <Text>₹{subtotal}</Text>
-            </View>
-
-            <View style={styles.billRow}>
-              <Text>Delivery</Text>
-              <Text>₹{deliveryFee}</Text>
-            </View>
-
-            <View style={styles.totalRow}>
-              <Text>कुल राशि</Text>
-              <Text>₹{total}</Text>
-            </View>
+            <Text style={styles.totalLabel}>कुल कीमत</Text>
+            <Text style={styles.totalPrice}>₹{totalPrice}</Text>
           </View>
 
           <TouchableOpacity
-            style={styles.mainButton}
-            onPress={() => setScreen("checkout")}
+            style={styles.checkoutButton}
+            onPress={placeOrder}
           >
-            <Text style={styles.mainButtonText}>
-              Checkout • ₹{total}
-            </Text>
+            <Text style={styles.checkoutText}>ऑर्डर करें • ₹{totalPrice}</Text>
           </TouchableOpacity>
         </>
       )}
-    </ScrollView>
-  );
-
-  const Checkout = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>📦 Checkout</Text>
-
-      <View style={styles.checkoutBox}>
-        <Text style={styles.checkoutTitle}>डिलीवरी जानकारी</Text>
-
-        <Text style={styles.label}>नाम</Text>
-        <View style={styles.input}>
-          <Text style={styles.placeholder}>अपना नाम दर्ज करें</Text>
-        </View>
-
-        <Text style={styles.label}>मोबाइल नंबर</Text>
-        <View style={styles.input}>
-          <Text style={styles.placeholder}>मोबाइल नंबर दर्ज करें</Text>
-        </View>
-
-        <Text style={styles.label}>डिलीवरी पता</Text>
-        <View style={[styles.input, styles.addressInput]}>
-          <Text style={styles.placeholder}>
-            पूरा पता दर्ज करें
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.bill}>
-        <Text style={styles.billTitle}>Payment Summary</Text>
-
-        <View style={styles.billRow}>
-          <Text>Items</Text>
-          <Text>{totalItems}</Text>
-        </View>
-
-        <View style={styles.billRow}>
-          <Text>Food</Text>
-          <Text>₹{subtotal}</Text>
-        </View>
-
-        <View style={styles.billRow}>
-          <Text>Delivery</Text>
-          <Text>₹{deliveryFee}</Text>
-        </View>
-
-        <View style={styles.totalRow}>
-          <Text>कुल</Text>
-          <Text>₹{total}</Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={styles.mainButton}
-        onPress={placeOrder}
-      >
-        <Text style={styles.mainButtonText}>
-          ✅ ऑर्डर प्लेस करें
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 
@@ -357,6 +251,7 @@ export default function App() {
 
         <TouchableOpacity onPress={() => setScreen("cart")}>
           <Text style={styles.cartIcon}>🛒</Text>
+
           {totalItems > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{totalItems}</Text>
@@ -366,10 +261,9 @@ export default function App() {
       </View>
 
       <View style={styles.content}>
-        {screen === "home" && <Home />}
-        {screen === "menu" && <Menu />}
-        {screen === "cart" && <Cart />}
-        {screen === "checkout" && <Checkout />}
+        {screen === "home" && <HomeScreen />}
+        {screen === "menu" && <MenuScreen />}
+        {screen === "cart" && <CartScreen />}
       </View>
 
       <View style={styles.bottomNav}>
@@ -378,7 +272,7 @@ export default function App() {
           onPress={() => setScreen("home")}
         >
           <Text style={styles.navEmoji}>🏠</Text>
-          <Text style={styles.navText}>Home</Text>
+          <Text style={styles.navText}>होम</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -386,7 +280,7 @@ export default function App() {
           onPress={() => setScreen("menu")}
         >
           <Text style={styles.navEmoji}>🍽️</Text>
-          <Text style={styles.navText}>Menu</Text>
+          <Text style={styles.navText}>मेन्यू</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -394,7 +288,7 @@ export default function App() {
           onPress={() => setScreen("cart")}
         >
           <Text style={styles.navEmoji}>🛒</Text>
-          <Text style={styles.navText}>Cart</Text>
+          <Text style={styles.navText}>कार्ट</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -404,16 +298,18 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8EF",
+    backgroundColor: "#FFF8F0",
   },
 
   header: {
     height: 65,
-    backgroundColor: "#7B2D26",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 18,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEEEEE",
   },
 
   headerLogo: {
@@ -421,237 +317,179 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    color: "#FFFFFF",
     fontSize: 21,
     fontWeight: "bold",
+    color: "#7A321D",
   },
 
   cartIcon: {
-    fontSize: 27,
+    fontSize: 28,
   },
 
   badge: {
     position: "absolute",
     right: -5,
-    top: -5,
-    backgroundColor: "#FFD166",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    top: -7,
+    backgroundColor: "#D84315",
+    borderRadius: 12,
+    minWidth: 22,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
   },
 
   badgeText: {
-    fontSize: 12,
+    color: "#FFFFFF",
     fontWeight: "bold",
-    color: "#7B2D26",
+    fontSize: 12,
   },
 
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
 
   hero: {
-    backgroundColor: "#8E3B32",
-    borderRadius: 22,
-    padding: 28,
+    marginTop: 18,
+    padding: 25,
+    borderRadius: 20,
+    backgroundColor: "#F2C078",
     alignItems: "center",
-    marginBottom: 22,
   },
 
   logo: {
-    fontSize: 60,
-    marginBottom: 5,
+    fontSize: 55,
   },
 
-  appName: {
-    color: "#FFFFFF",
+  title: {
     fontSize: 32,
     fontWeight: "bold",
-    textAlign: "center",
+    color: "#672D18",
+    marginTop: 5,
   },
 
-  tagline: {
-    color: "#FFE9D5",
+  subtitle: {
     fontSize: 16,
-    marginTop: 8,
+    color: "#5A3A25",
     textAlign: "center",
+    marginTop: 8,
   },
 
-  mainButton: {
-    backgroundColor: "#F4A261",
-    borderRadius: 14,
-    paddingVertical: 15,
-    paddingHorizontal: 22,
-    alignItems: "center",
-    marginTop: 22,
-    marginBottom: 12,
+  orderButton: {
+    backgroundColor: "#7A321D",
+    paddingVertical: 13,
+    paddingHorizontal: 25,
+    borderRadius: 30,
+    marginTop: 20,
   },
 
-  mainButtonText: {
+  orderButtonText: {
     color: "#FFFFFF",
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "bold",
   },
 
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: "bold",
-    color: "#4A241E",
-    marginBottom: 14,
+    color: "#5C2817",
+    marginTop: 24,
+    marginBottom: 12,
   },
 
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-
-  smallCard: {
-    width: "48%",
+  featureBox: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    padding: 15,
+    flexDirection: "row",
     alignItems: "center",
     elevation: 2,
   },
 
-  foodEmoji: {
-    fontSize: 42,
+  featureEmoji: {
+    fontSize: 50,
+    marginRight: 15,
   },
 
-  foodName: {
-    fontSize: 15,
+  featureTitle: {
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#4A241E",
-    textAlign: "center",
-    marginTop: 8,
+    color: "#442519",
+  },
+
+  featureText: {
+    color: "#777",
+    marginTop: 3,
+    fontSize: 13,
   },
 
   price: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#B24C35",
+    color: "#D84315",
     marginTop: 5,
   },
 
-  infoBox: {
-    backgroundColor: "#FFF0D9",
-    borderRadius: 16,
-    padding: 18,
-    marginTop: 8,
-    marginBottom: 20,
+  smallButton: {
+    backgroundColor: "#7A321D",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
   },
 
-  infoTitle: {
-    fontSize: 18,
+  smallButtonText: {
+    color: "#FFFFFF",
     fontWeight: "bold",
-    color: "#6B3028",
-    marginBottom: 6,
+  },
+
+  infoBox: {
+    backgroundColor: "#FFFFFF",
+    padding: 18,
+    borderRadius: 15,
   },
 
   infoText: {
     fontSize: 15,
-    color: "#5B403B",
-    lineHeight: 22,
+    lineHeight: 23,
+    color: "#555",
+  },
+
+  features: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
+    marginBottom: 25,
+  },
+
+  featureCard: {
+    backgroundColor: "#FFFFFF",
+    width: "31%",
+    paddingVertical: 15,
+    borderRadius: 15,
+    alignItems: "center",
+  },
+
+  cardEmoji: {
+    fontSize: 30,
+  },
+
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 7,
+    color: "#555",
   },
 
   pageTitle: {
     fontSize: 27,
     fontWeight: "bold",
-    color: "#4A241E",
-    marginBottom: 18,
+    color: "#5C2817",
+    marginTop: 20,
+    marginBottom: 15,
   },
 
   menuCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 17,
-    padding: 12,
-    marginBottom: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    elevation: 2,
-  },
-
-  foodIconBox: {
-    width: 70,
-    height: 70,
-    borderRadius: 14,
-    backgroundColor: "#FFF0D9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  bigEmoji: {
-    fontSize: 38,
-  },
-
-  menuInfo: {
-    flex: 1,
-    marginLeft: 13,
-  },
-
-  menuName: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#4A241E",
-  },
-
-  menuDesc: {
-    color: "#777",
-    marginTop: 4,
-    fontSize: 13,
-  },
-
-  menuPrice: {
-    color: "#B24C35",
-    fontSize: 17,
-    fontWeight: "bold",
-    marginTop: 6,
-  },
-
-  addButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#7B2D26",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  addText: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    lineHeight: 30,
-  },
-
-  emptyBox: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    padding: 30,
-    borderRadius: 20,
-  },
-
-  emptyEmoji: {
-    fontSize: 60,
-  },
-
-  emptyTitle: {
-    fontSize: 23,
-    fontWeight: "bold",
-    color: "#4A241E",
-    marginTop: 12,
-  },
-
-  emptyText: {
-    color: "#777",
-    marginTop: 7,
-  },
-
-  cartCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 14,
@@ -661,47 +499,166 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
+  menuEmoji: {
+    fontSize: 48,
+    marginRight: 14,
+  },
+
+  menuInfo: {
+    flex: 1,
+  },
+
+  menuName: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#442519",
+  },
+
+  category: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 3,
+  },
+
+  addButton: {
+    backgroundColor: "#7A321D",
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+  },
+
+  addButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+
+  emptyBox: {
+    backgroundColor: "#FFFFFF",
+    padding: 30,
+    borderRadius: 20,
+    alignItems: "center",
+    marginTop: 30,
+  },
+
+  emptyEmoji: {
+    fontSize: 65,
+  },
+
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#5C2817",
+    marginTop: 10,
+  },
+
+  emptyText: {
+    color: "#777",
+    textAlign: "center",
+    marginTop: 8,
+  },
+
+  cartCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 15,
+    padding: 14,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   cartEmoji: {
-    fontSize: 38,
-    marginRight: 12,
+    fontSize: 42,
+    marginRight: 13,
   },
 
-  cartName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#4A241E",
-  },
-
-  cartPrice: {
-    color: "#B24C35",
-    fontWeight: "bold",
-    marginTop: 4,
-  },
-
-  qtyBox: {
+  quantity: {
     flexDirection: "row",
     alignItems: "center",
   },
 
   qtyButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#7B2D26",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#7A321D",
     alignItems: "center",
     justifyContent: "center",
   },
 
   qtyText: {
     color: "#FFFFFF",
-    fontSize: 21,
+    fontSize: 20,
     fontWeight: "bold",
   },
 
   qtyNumber: {
     fontSize: 17,
     fontWeight: "bold",
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
 
-  bill: {
+  totalBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 18,
+    marginTop: 10,
+    marginBottom: 15,
+  },
+
+  totalLabel: {
+    color: "#777",
+    fontSize: 14,
+    marginTop: 4,
+  },
+
+  totalValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  totalPrice: {
+    fontSize: 27,
+    fontWeight: "bold",
+    color: "#D84315",
+    marginTop: 3,
+  },
+
+  checkoutButton: {
+    backgroundColor: "#D84315",
+    padding: 17,
+    borderRadius: 30,
+    alignItems: "center",
+    marginBottom: 25,
+  },
+
+  checkoutText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  bottomNav: {
+    height: 65,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#EEEEEE",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+
+  navItem: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  navEmoji: {
+    fontSize: 23,
+  },
+
+  navText: {
+    fontSize: 12,
+    color: "#555",
+    marginTop: 2,
+  },
+});
