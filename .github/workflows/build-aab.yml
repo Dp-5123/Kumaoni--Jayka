@@ -30,8 +30,7 @@ jobs:
 
       - name: Build Android AAB
         run: |
-          npm install -g @bubblewrap/cli
-          bubblewrap build
+
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
